@@ -147,5 +147,35 @@ room_data = [
 
 booking_manager = BookingManager(bot, h1, room_data)
 
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id, f'Вас вітає готель <b>"{h1._name}"</b>\n', parse_mode='html')
+    markup = types.InlineKeyboardMarkup()
+    btn2 = types.InlineKeyboardButton("Огляд номерів", callback_data="Огляд номерів")
+    markup.row(btn2)
+    bot.send_message(message.chat.id, f'Адреса: {h1._address}\nРейтинг: {h1._rating}⭐️\nКонтакти: \n'
+                                      f'{h1._phone}\n {h1._email}', reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data == "Огляд номерів")
+def handle_room_overview(call):
+    booking_manager.send_room_list(call.message)
+
+@bot.callback_query_handler(func=lambda call: call.data == "book_now")
+def handle_booking_now(call):
+    booking_manager.choose_room(call)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("room_"))
+def handle_room_selection(call):
+    room_title = call.data.replace("room_", "")
+    booking_manager.confirm_room(call, room_title)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("checkin_"))
+def handle_checkin_calendar(call):
+    booking_manager.handle_calendar(call, "checkin")
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("checkout_"))
+def handle_checkout_calendar(call):
+    booking_manager.handle_calendar(call, "checkout")
+
 
 bot.polling(none_stop=True)
