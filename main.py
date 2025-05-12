@@ -72,6 +72,57 @@ class BookingManager:
         self.bot.send_message(call.message.chat.id, f"Чудовий вибір!\nВи обрали {room_title}.")
         self.send_calendar(call.message, "checkin")
 
+    def send_calendar(self, message, prefix):
+        now = datetime.now()
+        markup = create_calendar(now.year, now.month, prefix)
+        self.bot.send_message(message.chat.id, f"Виберіть дату {'заїзду' if prefix == 'checkin' else 'виїзду'}:", reply_markup=markup)
+
+    def handle_calendar(self, call, prefix):
+        parts = call.data.split("_")
+        action = parts[1]
+
+        if action in ("prev", "next"):
+            year, month = int(parts[2]), int(parts[3])
+            if action == "prev":
+                month -= 1
+                if month == 0:
+                    month = 12
+                    year -= 1
+            elif action == "next":
+                month += 1
+                if month == 13:
+                    month = 1
+                    year += 1
+            markup = create_calendar(year, month, prefix)
+            self.bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=markup)
+
+        elif action == "day":
+            day, month, year = int(parts[2]), int(parts[3]), int(parts[4])
+            date_str = f"{day:02d}.{month:02d}.{year}"
+            self.bot.edit_message_text(f"Дата {'заїзду' if prefix == 'checkin' else 'виїзду'}: {date_str}",
+                                       call.message.chat.id, call.message.message_id)
+            if prefix == "checkin":
+                self.send_calendar(call.message, "checkout")
+            else:
+                self.bot.send_message(call.message.chat.id, "✅ Бронювання завершено!")
+
+def create_calendar(year: int, month: int, prefix: str) -> types.InlineKeyboardMarkup:
+    markup = types.InlineKeyboardMarkup()
+    markup.row(
+        types.InlineKeyboardButton("⬅️", callback_data=f"{prefix}_prev_{year}_{month}"),
+        types.InlineKeyboardButton(f"{calendar.month_name[month]} {year}", callback_data="ignore"),
+        types.InlineKeyboardButton("➡️", callback_data=f"{prefix}_next_{year}_{month}")
+    )
+    days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"]
+    markup.row(*[types.InlineKeyboardButton(day, callback_data="ignore") for day in days])
+
+    for week in calendar.monthcalendar(year, month):
+        row = []
+        for day in week:
+            row.append(types.InlineKeyboardButton(" " if day == 0 else str(day),
+                                                  callback_data="ignore" if day == 0 else f"{prefix}_day_{day}_{month}_{year}"))
+        markup.row(*row)
+    return markup
 
 
 
