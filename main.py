@@ -124,6 +124,28 @@ def create_calendar(year: int, month: int, prefix: str) -> types.InlineKeyboardM
         markup.row(*row)
     return markup
 
+h1 = Hotel("Київська Хатка", "вул. Хрещатик, 1, Київ", 4.0,
+           3, 1000, "+380111111111", "info@kyivhatka.ua")
+
+room_data = [
+    {
+        "photo_path": "img/room_image.jpg",
+        "title": "№1 Двохмісний номер",
+        "description": "Комфортний номер з одним двоспальним ліжком. У номері є все необхідне: телевізор, санвузол, безкоштовний інтернет. Чудовий вибір для пари."
+    },
+    {
+        "photo_path": "img/image.jpg",
+        "title": "№2 Двохмісниий номер",
+        "description": "Невеличкий номер для двох осіб. Підійде для двох друзів. Є кондиціонер, ванна кімната, безкоштовний Wi-Fi."
+    },
+    {
+        "photo_path": "img/photo2.jpg",
+        "title": "№3 Одномісний номер",
+        "description": "Затишний номер для одного гостя з односпальним ліжком, базовими зручностями та Wi-Fi. Ідеально підходить для короткотривалого відпочинку чи ділової поїздки."
+    }
+]
+
+booking_manager = BookingManager(bot, h1, room_data)
 
 
 bot.polling(none_stop=True)
