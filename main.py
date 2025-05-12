@@ -1,5 +1,12 @@
+from datetime import datetime
+import calendar
+import telebot
+from telebot import types
+
+bot = telebot.TeleBot('7645087026:AAG202f9vc5_tQHJvwW1CRmOQ5E0Pc-Q8H8')
+
 class Hotel:
-    def __init__(self, name : str, address : str, rating : float, num_room : int, price : int, phone : str, email : str):
+    def __init__(self, name: str, address: str, rating: float, num_room: int, price: int, phone: str, email: str):
         self._name = name
         self._address = address
         self._rating = rating
@@ -25,7 +32,7 @@ class Hotel:
 
     def book_room(self, n):
         if self._room_available >= n:
-            self._room_available -=n
+            self._room_available -= n
             return True
         else:
             return f"Вільних номерів немає"
@@ -34,21 +41,8 @@ class Hotel:
         return self._price * nights
 
 
-h1 = Hotel("Готель Київ", "вул. Хрещатик, 1, Київ", 4.0, 10, 1400, "+3801111111111", "info@kyivhotel.ua")
-
-print(h1.get_info())
-print("Доступність номерів", h1.is_available())
-print(h1.book_room(2))
-print("Ціна за 5 ночей:", h1.calculate_price(5), "грн")
 
 
 
 
-
-
-
-
-
-
-
-
+bot.polling(none_stop=True)
