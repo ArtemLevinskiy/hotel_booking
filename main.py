@@ -41,6 +41,36 @@ class Hotel:
         return self._price * nights
 
 
+class BookingManager:
+    def __init__(self, bot, hotel: Hotel, room_data: list):
+        self.bot = bot
+        self.hotel = hotel
+        self.room_data = room_data
+        self.selected_room = {}
+
+    def send_room_list(self, message):
+        for room in self.room_data:
+            with open(room["photo_path"], 'rb') as photo:
+                caption = f"<b><u>{room['title']}</u></b>\n{room['description']}"
+                self.bot.send_photo(message.chat.id, photo, caption=caption, parse_mode='html')
+        self.ask_for_booking(message)
+
+    def ask_for_booking(self, message):
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("Так. Забронювати номер", callback_data="book_now"))
+        self.bot.send_message(message.chat.id, 'Хочете забронювати номер?', reply_markup=markup)
+
+    def choose_room(self, call):
+        markup = types.InlineKeyboardMarkup()
+        buttons = [types.InlineKeyboardButton(room["title"], callback_data=f"room_{room['title']}") for room in self.room_data]
+        for i in range(0, len(buttons), 2):
+            markup.row(*buttons[i:i + 2])
+        self.bot.send_message(call.message.chat.id, 'Виберіть номер.', reply_markup=markup)
+
+    def confirm_room(self, call, room_title):
+        self.selected_room[call.from_user.id] = room_title
+        self.bot.send_message(call.message.chat.id, f"Чудовий вибір!\nВи обрали {room_title}.")
+        self.send_calendar(call.message, "checkin")
 
 
 
