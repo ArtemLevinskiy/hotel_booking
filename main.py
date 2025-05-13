@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
 import telebot
 from telebot import types
@@ -47,6 +47,7 @@ class BookingManager:
         self.hotel = hotel
         self.room_data = room_data
         self.selected_room = {}
+        self.checkin_date = {}
 
     def send_room_list(self, message):
         for room in self.room_data:
@@ -74,8 +75,21 @@ class BookingManager:
 
     def send_calendar(self, message, prefix):
         now = datetime.now()
-        markup = create_calendar(now.year, now.month, prefix)
-        self.bot.send_message(message.chat.id, f"Виберіть дату {'заїзду' if prefix == 'checkin' else 'виїзду'}:", reply_markup=markup)
+        user_id = message.chat.id
+
+        if prefix == "checkin":
+            min_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        else:
+            checkin_str = self.checkin_date.get(user_id)
+            if not checkin_str:
+                self.bot.send_message(message.chat.id, "⚠️ Спочатку оберіть дату заїзду.")
+                return
+            checkin_date = datetime.strptime(checkin_str, "%d.%m.%Y")
+            min_date = checkin_date + timedelta(days=1)
+
+        markup = create_calendar(now.year, now.month, prefix, min_date)
+        self.bot.send_message(message.chat.id, f"Виберіть дату {'заїзду' if prefix == 'checkin' else 'виїзду'}:",
+                              reply_markup=markup)
 
     def handle_calendar(self, call, prefix):
         parts = call.data.split("_")
@@ -95,18 +109,18 @@ class BookingManager:
                     year += 1
             markup = create_calendar(year, month, prefix)
             self.bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=markup)
-
         elif action == "day":
             day, month, year = int(parts[2]), int(parts[3]), int(parts[4])
             date_str = f"{day:02d}.{month:02d}.{year}"
             self.bot.edit_message_text(f"Дата {'заїзду' if prefix == 'checkin' else 'виїзду'}: {date_str}",
                                        call.message.chat.id, call.message.message_id)
             if prefix == "checkin":
+                self.checkin_date[call.from_user.id] = date_str
                 self.send_calendar(call.message, "checkout")
             else:
                 self.bot.send_message(call.message.chat.id, "✅ Бронювання завершено!")
 
-def create_calendar(year: int, month: int, prefix: str) -> types.InlineKeyboardMarkup:
+def create_calendar(year: int, month: int, prefix: str, min_date: datetime = None) -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     markup.row(
         types.InlineKeyboardButton("⬅️", callback_data=f"{prefix}_prev_{year}_{month}"),
@@ -119,9 +133,16 @@ def create_calendar(year: int, month: int, prefix: str) -> types.InlineKeyboardM
     for week in calendar.monthcalendar(year, month):
         row = []
         for day in week:
-            row.append(types.InlineKeyboardButton(" " if day == 0 else str(day),
-                                                  callback_data="ignore" if day == 0 else f"{prefix}_day_{day}_{month}_{year}"))
+            if day == 0:
+                row.append(types.InlineKeyboardButton(" ", callback_data="ignore"))
+                continue
+            btn_date = datetime(year, month, day)
+            if min_date and btn_date < min_date:
+                row.append(types.InlineKeyboardButton(" ", callback_data="ignore"))
+            else:
+                row.append(types.InlineKeyboardButton(str(day), callback_data=f"{prefix}_day_{day}_{month}_{year}"))
         markup.row(*row)
+
     return markup
 
 h1 = Hotel("Київська Хатка", "вул. Хрещатик, 1, Київ", 4.0,
