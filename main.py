@@ -40,6 +40,16 @@ class Hotel:
     def calculate_price(self, nights):
         return self._price * nights
 
+class Client:
+    def __init__(self, first_name, last_name, phone_number, email):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.phone_number = phone_number
+        self.email = email
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}\nТелефон: {self.phone_number}\nEmail: {self.email}"
+
 
 class BookingManager:
     def __init__(self, bot, hotel: Hotel, room_data: list):
@@ -105,6 +115,26 @@ class BookingManager:
                 self.send_calendar(call.message, "checkout")
             else:
                 self.bot.send_message(call.message.chat.id, "✅ Бронювання завершено!")
+
+room_data = []
+
+class Room:
+    def __init__(self, photo, title, description):
+        self._photo = photo
+        self._title = title
+        self._description = description
+
+        room_data.append({
+            "photo_path": self._photo,
+            "title": self._title,
+            "description": self._description
+        })
+
+r1 = Room("img/room_image.jpg", "№1 Двохмісний номер", "Комфортний номер з одним двоспальним ліжком. У номері є все необхідне: телевізор, санвузол, безкоштовний інтернет. Чудовий вибір для пари.")
+r2 = Room("img/image.jpg", "№2 Двохмісниий номер", "Невеличкий номер для двох осіб. Підійде для двох друзів. Є кондиціонер, ванна кімната, безкоштовний Wi-Fi.")
+r3 = Room("img/photo2.jpg", "№3 Одномісний номер", "Затишний номер для одного гостя з односпальним ліжком, базовими зручностями та Wi-Fi. Ідеально підходить для короткотривалого відпочинку чи ділової поїздки.")
+
+c1 = Client('Валерія', 'Шульга', '+380999999999', 'shelg@gmail.com')
 
 def create_calendar(year: int, month: int, prefix: str) -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
