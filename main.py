@@ -39,13 +39,53 @@ class Hotel:
     def calculate_price(self, nights):
         return self._price * nights
 
-
+user_data = {}
+user_step = {}
 class Client:
     def __init__(self, first_name, last_name, phone_number, email):
         self.first_name = first_name
         self.last_name = last_name
         self.phone_number = phone_number
         self.email = email
+
+        @bot.message_handler(commands=['book'])
+        def start_booking(message):
+            user_id = message.from_user.id
+            user_step[user_id] = 'first_name'
+            bot.send_message(message.chat.id, "Введіть ваше ім'я:")
+
+        @bot.message_handler(func=lambda message: message.from_user.id in user_step)
+        def handle_client_info(message):
+            user_id = message.from_user.id
+            step = user_step[user_id]
+
+            if user_id not in user_data:
+                user_data[user_id] = {}
+
+            if step == 'first_name':
+                user_data[user_id]['first_name'] = message.text
+                user_step[user_id] = 'last_name'
+                bot.send_message(message.chat.id, "Введіть ваше прізвище:")
+
+            elif step == 'last_name':
+                user_data[user_id]['last_name'] = message.text
+                user_step[user_id] = 'phone'
+                bot.send_message(message.chat.id, "Введіть ваш номер телефону:")
+
+            elif step == 'phone':
+                user_data[user_id]['phone_number'] = message.text
+                user_step[user_id] = 'email'
+                bot.send_message(message.chat.id, "Введіть ваш email:")
+
+            elif step == 'email':
+                user_data[user_id]['email'] = message.text
+
+                data = user_data[user_id]
+                client = Client(data['first_name'], data['last_name'], data['phone_number'], data['email'])
+
+                del user_step[user_id]
+                del user_data[user_id]
+                bot.send_message(message.chat.id, f"Дякуємо! Ваші дані збережено:\n{client}")
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}\nТелефон: {self.phone_number}\nEmail: {self.email}"
