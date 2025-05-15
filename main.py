@@ -1,8 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
 import telebot
 from telebot import types
-
 bot = telebot.TeleBot('7645087026:AAG202f9vc5_tQHJvwW1CRmOQ5E0Pc-Q8H8')
 
 class Hotel:
@@ -40,6 +39,7 @@ class Hotel:
     def calculate_price(self, nights):
         return self._price * nights
 
+
 class Client:
     def __init__(self, first_name, last_name, phone_number, email):
         self.first_name = first_name
@@ -53,34 +53,34 @@ class Client:
 
 class BookingManager:
     def __init__(self, bot, hotel: Hotel, room_data: list):
-        self.bot = bot
-        self.hotel = hotel
-        self.room_data = room_data
-        self.selected_room = {}
-        self.checkin_date = {}
+        self._bot = bot
+        self._hotel = hotel
+        self._room_data = room_data
+        self._selected_room = {}
+        self._checkin_date = {}
 
     def send_room_list(self, message):
-        for room in self.room_data:
+        for room in self._room_data:
             with open(room["photo_path"], 'rb') as photo:
                 caption = f"<b><u>{room['title']}</u></b>\n{room['description']}"
-                self.bot.send_photo(message.chat.id, photo, caption=caption, parse_mode='html')
+                self._bot.send_photo(message.chat.id, photo, caption=caption, parse_mode='html')
         self.ask_for_booking(message)
 
     def ask_for_booking(self, message):
         markup = types.InlineKeyboardMarkup()
         markup.add(types.InlineKeyboardButton("Так. Забронювати номер", callback_data="book_now"))
-        self.bot.send_message(message.chat.id, 'Хочете забронювати номер?', reply_markup=markup)
+        self._bot.send_message(message.chat.id, 'Хочете забронювати номер?', reply_markup=markup)
 
     def choose_room(self, call):
         markup = types.InlineKeyboardMarkup()
-        buttons = [types.InlineKeyboardButton(room["title"], callback_data=f"room_{room['title']}") for room in self.room_data]
+        buttons = [types.InlineKeyboardButton(room["title"], callback_data=f"room_{room['title']}") for room in self._room_data]
         for i in range(0, len(buttons), 2):
             markup.row(*buttons[i:i + 2])
-        self.bot.send_message(call.message.chat.id, 'Виберіть номер.', reply_markup=markup)
+        self._bot.send_message(call.message.chat.id, 'Виберіть номер.', reply_markup=markup)
 
     def confirm_room(self, call, room_title):
-        self.selected_room[call.from_user.id] = room_title
-        self.bot.send_message(call.message.chat.id, f"Чудовий вибір!\nВи обрали {room_title}.")
+        self._selected_room[call.from_user.id] = room_title
+        self._bot.send_message(call.message.chat.id, f"Чудовий вибір!\nВи обрали {room_title}.")
         self.send_calendar(call.message, "checkin")
 
     def send_calendar(self, message, prefix):
@@ -90,15 +90,15 @@ class BookingManager:
         if prefix == "checkin":
             min_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
         else:
-            checkin_str = self.checkin_date.get(user_id)
+            checkin_str = self._checkin_date.get(user_id)
             if not checkin_str:
-                self.bot.send_message(message.chat.id, "Спочатку оберіть дату заїзду.")
+                self._bot.send_message(message.chat.id, "Спочатку оберіть дату заїзду.")
                 return
             checkin_date = datetime.strptime(checkin_str, "%d.%m.%Y")
             min_date = checkin_date + timedelta(days=1)
 
         markup = create_calendar(now.year, now.month, prefix, min_date)
-        self.bot.send_message(message.chat.id, f"Виберіть дату {'заїзду' if prefix == 'checkin' else 'виїзду'}:",
+        self._bot.send_message(message.chat.id, f"Виберіть дату {'заїзду' if prefix == 'checkin' else 'виїзду'}:",
                               reply_markup=markup)
 
     def handle_calendar(self, call, prefix):
@@ -118,18 +118,18 @@ class BookingManager:
                     month = 1
                     year += 1
             markup = create_calendar(year, month, prefix)
-            self.bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=markup)
-
+            self._bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=markup)
         elif action == "day":
             day, month, year = int(parts[2]), int(parts[3]), int(parts[4])
             date_str = f"{day:02d}.{month:02d}.{year}"
-            self.bot.edit_message_text(f"Дата {'заїзду' if prefix == 'checkin' else 'виїзду'}: {date_str}",
+            self._bot.edit_message_text(f"Дата {'заїзду' if prefix == 'checkin' else 'виїзду'}: {date_str}",
                                        call.message.chat.id, call.message.message_id)
             if prefix == "checkin":
-                self.checkin_date[call.from_user.id] = date_str
+                self._checkin_date[call.from_user.id] = date_str
                 self.send_calendar(call.message, "checkout")
             else:
-                self.bot.send_message(call.message.chat.id, "✅ Бронювання завершено!")
+                self._bot.send_message(call.message.chat.id, "Бронювання завершено!")
+
 
 room_data = []
 
@@ -151,7 +151,12 @@ r3 = Room("img/photo2.jpg", "№3 Одномісний номер", "Затиш�
 
 c1 = Client('Валерія', 'Шульга', '+380999999999', 'shelg@gmail.com')
 
-def create_calendar(year: int, month: int, prefix: str) -> types.InlineKeyboardMarkup:
+h1 = Hotel("Київська Хатка", "вул. Хрещатик, 1, Київ", 4.0,
+           3, 1000, "+380111111111", "info@kyivhatka.ua")
+bm = BookingManager(bot, h1, room_data)
+
+
+def create_calendar(year: int, month: int, prefix: str, min_date: datetime = None) -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup()
     markup.row(
         types.InlineKeyboardButton("⬅️", callback_data=f"{prefix}_prev_{year}_{month}"),
@@ -173,31 +178,9 @@ def create_calendar(year: int, month: int, prefix: str) -> types.InlineKeyboardM
             else:
                 row.append(types.InlineKeyboardButton(str(day), callback_data=f"{prefix}_day_{day}_{month}_{year}"))
         markup.row(*row)
-
     return markup
 
-h1 = Hotel("Київська Хатка", "вул. Хрещатик, 1, Київ", 4.0,
-           3, 1000, "+380111111111", "info@kyivhatka.ua")
 
-room_data = [
-    {
-        "photo_path": "img/room_image.jpg",
-        "title": "№1 Двохмісний номер",
-        "description": "Комфортний номер з одним двоспальним ліжком. У номері є все необхідне: телевізор, санвузол, безкоштовний інтернет. Чудовий вибір для пари."
-    },
-    {
-        "photo_path": "img/image.jpg",
-        "title": "№2 Двохмісниий номер",
-        "description": "Невеличкий номер для двох осіб. Підійде для двох друзів. Є кондиціонер, ванна кімната, безкоштовний Wi-Fi."
-    },
-    {
-        "photo_path": "img/photo2.jpg",
-        "title": "№3 Одномісний номер",
-        "description": "Затишний номер для одного гостя з односпальним ліжком, базовими зручностями та Wi-Fi. Ідеально підходить для короткотривалого відпочинку чи ділової поїздки."
-    }
-]
-
-booking_manager = BookingManager(bot, h1, room_data)
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -210,24 +193,24 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda call: call.data == "Огляд номерів")
 def handle_room_overview(call):
-    booking_manager.send_room_list(call.message)
+    bm.send_room_list(call.message)
 
 @bot.callback_query_handler(func=lambda call: call.data == "book_now")
 def handle_booking_now(call):
-    booking_manager.choose_room(call)
+    bm.choose_room(call)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("room_"))
 def handle_room_selection(call):
     room_title = call.data.replace("room_", "")
-    booking_manager.confirm_room(call, room_title)
+    bm.confirm_room(call, room_title)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("checkin_"))
 def handle_checkin_calendar(call):
-    booking_manager.handle_calendar(call, "checkin")
+    bm.handle_calendar(call, "checkin")
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("checkout_"))
 def handle_checkout_calendar(call):
-    booking_manager.handle_calendar(call, "checkout")
+    bm.handle_calendar(call, "checkout")
 
 
 bot.polling(none_stop=True)
