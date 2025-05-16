@@ -1,3 +1,5 @@
+import threading
+import time
 import re
 from datetime import datetime, timedelta
 import calendar
@@ -152,6 +154,32 @@ class Booking:
         return markup
 
 
+class Notification:
+    def __init__(self, bot, booking: Booking):
+        self._bot = bot
+        self._booking = booking
+        threading.Thread(target=self._run, daemon=True).start()
+
+    def _run(self):
+        while True:
+            now = datetime.now()
+            target_time = now.replace(hour=9, minute=0, second=0, microsecond=0)
+            if now >= target_time:
+                target_time += timedelta(days=1)
+            wait_seconds = (target_time - now).total_seconds()
+            time.sleep(wait_seconds)
+            self._send_reminders()
+
+    def _send_reminders(self):
+        for user_id, date_str in self._booking._checkin_date.items():
+            try:
+                checkin_date = datetime.strptime(date_str, "%d.%m.%Y").date()
+                if (checkin_date - datetime.now().date()).days == 1:
+                    self._bot.send_message(user_id, "Нагадування: завтра у вас заїзд до готелю. Чекаємо на вас!")
+            except Exception as e:
+                print(f"Помилка у Notification: {e}")
+
+
 rooms = [
     Room("img/room_image.jpg", "№1 Двохмісний номер", "Комфортний номер з двоспальним ліжком."),
     Room("img/image.jpg", "№2 Двохмісниий номер", "Номер для двох друзів."),
@@ -160,6 +188,8 @@ rooms = [
 
 hotel = Hotel("Київська Хатка", "вул. Хрещатик, 1, Київ", 4.0, 3, 1000, "+380111111111", "info@kyivhatka.ua")
 manager = Booking(bot, hotel, rooms)
+
+notifier = Notification(bot, manager)
 
 user_data = {}
 user_step = {}
