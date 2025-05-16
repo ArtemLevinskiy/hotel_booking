@@ -129,6 +129,7 @@ class Booking:
                 self.send_calendar(call.message.chat.id, "checkout")
             else:
                 self._bot.send_message(call.message.chat.id, "Бронювання завершено!")
+                book_client(call.message.chat.id, call.from_user.id)
 
     def create_calendar(self, year, month, prefix, min_date=None):
         markup = types.InlineKeyboardMarkup()
@@ -199,10 +200,9 @@ def calendar_checkout(call):
     manager.handle_calendar(call, "checkout")
 
 
-@bot.message_handler(commands=['book'])
-def book_client(message):
-    user_step[message.from_user.id] = 'first_name'
-    bot.send_message(message.chat.id, "Введіть ваше ім'я:")
+def book_client(chat_id, user_id):
+    user_step[user_id] = 'first_name'
+    bot.send_message(chat_id, "Введіть ваше ім'я:")
 
 
 @bot.message_handler(func=lambda msg: msg.from_user.id in user_step)
