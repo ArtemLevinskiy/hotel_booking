@@ -63,12 +63,18 @@ class Room:
         self._price = price
         self._photo = photo
 
+        if type(title) != str or type(description) != str or type(photo) != str or type(price) != int:
+            raise TypeError("Опис кімнати повинен бути рядком")
+        if price <= 0:
+            raise ValueError("Ціна за добу не може бути менше 0")
+
 
 class Booking:
-    def __init__(self, client: Client, hotel: Hotel, room: Room, nights: int, rooms_count: int = 1):
+    def __init__(self, client: Client, hotel: Hotel, room: Room, nights: int, checkin_date: str, rooms_count: int = 1):
         self._client = client
         self._hotel = hotel
         self._room = room
+        self.checkin_date = checkin_date
         self._nights = nights
         self._rooms_count = rooms_count
         self._total_price = room._price * nights * rooms_count
@@ -110,36 +116,35 @@ class Notification:
 
         if days_left > 1:
             message = (
-                f"🔔 Нагадування: до вашого заїзду в готель залишилось {days_left} днів.\n"
+                f"Нагадування: до вашого заїзду в готель залишилось {days_left} днів.\n"
                 f"Готель: {self._booking._hotel._name.title()}\n"
                 f"Дата заїзду: {checkin.strftime('%d.%m.%Y')}\n"
                 f"Ми чекаємо на вас!"
             )
         elif days_left == 1:
             message = (
-                f"🔔 Нагадування: ваш заїзд в готель вже завтра!\n"
+                f"Нагадування: ваш заїзд в готель вже завтра!\n"
                 f"Готель: {self._booking._hotel._name.title()}\n"
                 f"Номер: {self._booking._room._title}\n"
                 f"Дата заїзду: {checkin.strftime('%d.%m.%Y')}"
             )
         elif days_left == 0:
             message = (
-                f"🏨 Сьогодні ваш заїзд у готель \"{self._booking._hotel._name.title()}\"!\n"
-                f"Будь ласка, не забудьте документи для поселення.\n"
-                f"Чекаємо вас з нетерпінням! 🛎"
+                f"Сьогодні ваш заїзд у готель \"{self._booking._hotel._name.title()}\"!\n"
+                f"Чекаємо вас з нетерпінням!"
             )
         elif days_left < 0:
-            message = f"❗️ Дата заїзду ({checkin.strftime('%d.%m.%Y')}) вже минула."
+            message = f"Дата заїзду ({checkin.strftime('%d.%m.%Y')}) вже минула."
 
         print(message)
         return message
 
 
 h1 = Hotel("КиЇвська ХАтка", "вул. Хрещатик, 1, Київ", 4.0, 3, "+380111111111", "info@kyivhatka.ua")
+h2 = Hotel("ХАтка", "вул. Хрещатик, 1, Київ", 4.0, 3, "+380111111111", "info@kyivhatka.ua")
+
 
 c1 = Client("aRtem", "LEVinskiy", "+380978517087", "levinskiy2306@gmail.com")
-c2 = Client("MalANa", "MELL", "+380978517087", "levinskiy2306@gmail.com")
-c3 = Client("AliNA", "LEVinskaya", "+380978517087", "levinskiy2306@gmail.com")
 
 rooms = [
     Room("№1 Двохмісний номер", "Комфортний номер з двоспальним ліжком.", 1000, "img/room_image.jpg"),
@@ -147,13 +152,8 @@ rooms = [
     Room("№3 Одномісний номер", "Номер для одного гостя.", 2000, "img/photo2.jpg")
 ]
 
-b1 = Booking(c1, h1, rooms[0], 3, 1)
-b2 = Booking(c2, h1, rooms[0], 3, 1)
-b3 = Booking(c3, h1, rooms[2], 3, 1)
+b1 = Booking(c1, h1, rooms[0], 3, "24.05.2025", 1)
 print(b1)
-print(b2)
-print(b3)
 
-b1 = Booking(c1, h1, rooms[0], 3, "26.05.2025", 1)
 n1 = Notification(b1)
 n1.send_reminder()
