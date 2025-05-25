@@ -1,6 +1,3 @@
-import threading
-import time
-import re
 import calendar
 from datetime import datetime, timedelta, date
 import telebot
@@ -48,7 +45,7 @@ class BotManager:
 
     def send_calendar(self, chat_id, prefix):
         now = datetime.now()
-        min_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        min_date = now.replace(hour=9, minute=0, second=0, microsecond=0)
 
         if prefix == "checkout":
             checkin_str = self._checkin_date.get(chat_id)
@@ -113,7 +110,7 @@ manager = BotManager(bot, h1, rooms)
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, f'Вас вітає готель <b>"{h1._name}"</b>', parse_mode='html')
+    bot.send_message(message.chat.id, f'Вас вітає готель <b>"{h1._name.title()}"</b>', parse_mode='html')
     info = f"Адреса: {h1._address}\nРейтинг: {h1._rating}⭐️\nКонтакти:\n{h1._phone}\n{h1._email}"
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("Огляд номерів", callback_data="view_rooms"))
@@ -166,17 +163,30 @@ def handle_steps(message):
         user_step[user_id] = 'phone'
         bot.send_message(message.chat.id, "Введіть номер телефону:")
     elif step == 'phone':
-        if not re.fullmatch(r"\+?\d{10,15}", message.text):
-            bot.send_message(message.chat.id, "Некоректний номер. Спробуйте ще раз:")
+        phone_number = message.text
+        if phone_number.startswith('+380'):
+            if len(phone_number) != 13 or not phone_number[1:].isdigit():
+                bot.send_message(message.chat.id, "Номер введено некоректно. Спробуйте ще раз:")
+                return
+        elif phone_number.startswith('0'):
+            if len(phone_number) != 10 or not phone_number.isdigit():
+                bot.send_message(message.chat.id, "Номер введено некоректно. Спробуйте ще раз:")
+                return
+        else:
+            bot.send_message(message.chat.id, "Номер введено некоректно. Спробуйте ще раз:")
             return
-        user_data[user_id]['phone'] = message.text
+        user_data[user_id]['phone'] = phone_number
         user_step[user_id] = 'email'
         bot.send_message(message.chat.id, "Введіть email:")
+
+
     elif step == 'email':
-        if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", message.text):
-            bot.send_message(message.chat.id, "Некоректний email. Спробуйте ще раз:")
+        email = message.text
+        if "@" not in email or "." not in email:
+            bot.send_message(message.chat.id, "Адрес електронної пошти введено некоректно. Спробуйте ще раз:")
             return
-        user_data[user_id]['email'] = message.text
+        user_data[user_id]['email'] = email
+
 
         data = user_data[user_id]
         client = Client(data['first_name'], data['last_name'], data['phone'], data['email'])
@@ -187,7 +197,7 @@ def handle_steps(message):
         selected_room = next(room for room in rooms if room._title == selected_room_title)
         booking = Booking(client, h1, selected_room, nights, checkin)
 
-        bot.send_message(message.chat.id, f"✅ Успішне бронювання:\n{booking}")
+        bot.send_message(message.chat.id, f"Успішне бронювання:\n{booking}")
         del user_step[user_id]
         del user_data[user_id]
 

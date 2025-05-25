@@ -85,13 +85,10 @@ class Booking:
 
         if nights < 1:
             raise ValueError("Кількість ночей має бути більше 0")
-
         if not hotel.is_available():
             raise ValueError("Немає доступних номерів у готелі")
-
         if rooms_count > hotel._room_available:
             raise ValueError("Недостатньо доступних номерів для бронювання")
-
         if not hotel.book_room(rooms_count):
             raise ValueError("Не вдалося забронювати потрібну кількість номерів")
 
