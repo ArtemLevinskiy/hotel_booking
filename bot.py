@@ -1,4 +1,3 @@
-# hotel_bot.py
 import threading
 import time
 import re
@@ -7,7 +6,6 @@ from datetime import datetime, timedelta, date
 import telebot
 from telebot import types
 from main import Hotel, Room, Client, Booking, h1, rooms
-
 
 bot = telebot.TeleBot('7645087026:AAG202f9vc5_tQHJvwW1CRmOQ5E0Pc-Q8H8')
 
