@@ -2,7 +2,7 @@ import calendar
 from datetime import datetime, timedelta, date
 import telebot
 from telebot import types
-from main import Hotel, Room, Client, Booking, h1, rooms
+from booking import Hotel, Room, Client, Booking, h1, rooms
 
 bot = telebot.TeleBot('7645087026:AAG202f9vc5_tQHJvwW1CRmOQ5E0Pc-Q8H8')
 
@@ -21,7 +21,7 @@ class BotManager:
     def send_room_list(self, chat_id):
         for room in self._rooms:
             with open(room._photo, 'rb') as photo:
-                caption = f"<b><u>{room._title}</u></b>\n{room._description}\nЦіна: {room._price} грн/ніч"
+                caption = f"<b><u>{room._title}</u></b>\n{room._description}\nЦіна: {room._price} грн/доба"
                 self._bot.send_photo(chat_id, photo, caption=caption, parse_mode='html')
         self.ask_for_booking(chat_id)
 
