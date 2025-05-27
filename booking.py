@@ -71,13 +71,13 @@ class Hotel:
     def book_room(self, count):
         """
         Description:
-            Бронює вказану кількість номерів, якщо вони доступні (Reserves the specified number of rooms, if available)
+            Перевіряє доступність номерів(Checks room availability)
 
         Args:
             count (int): Кількість номерів для бронювання (Number of rooms to book)
 
         Return:
-            bool: True, якщо бронювання успішне; False, якщо ні (True if the booking is successful; False if not)
+            bool: True, якщо доступні; False, якщо ні (True, якщо доступні; False, якщо ні)
         """
         if self._room_available >= count:
             self._room_available -= count
