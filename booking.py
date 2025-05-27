@@ -281,7 +281,7 @@ class Booking:
 h1 = Hotel("КиЇвська ХАтка", "вул. Хрещатик, 1, Київ", 4.0,
            3, "+380111111111", "info@kyivhatka.ua")
 
-c1 = Client("aRtem", "LEVinskiy", "+380978517087", "levinskiy2306@gmail.com")
+c1 = Client("aRtem", "LEVinskiy", "+380978000087", "levinskiy2306@gmail.com")
 
 rooms = [
     Room("№1 Двохмісний номер", "Комфортний номер з двоспальним ліжком.", 1000, "img/room_image.jpg"),
