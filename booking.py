@@ -53,7 +53,7 @@ class Hotel:
     def __str__(self):
         """
         Description:
-            Повертає рядковий опис готелю (Повертає рядковий опис готелю)
+            Повертає рядковий опис готелю (Returns a string description of the hotel)
         Return:
             str: У форматі: Name, Address, рейтинг: rating (In the format: Name, Address, rating: rating)
         """
@@ -62,7 +62,7 @@ class Hotel:
     def is_available(self):
         """
         Description:
-            Перевіряє наявність вільних номерів у готелі (Перевіряє наявність вільних номерів у готелі)
+            Перевіряє наявність вільних номерів у готелі (Checks availability of hotel rooms)
         Return:
             True, якщо є вільні номери.False, якщо немає (True if there are free numbers.False if there are not)
         """
@@ -71,7 +71,7 @@ class Hotel:
     def book_room(self, count):
         """
         Description:
-            Бронює вказану кількість номерів, якщо вони доступні (Бронює вказану кількість номерів, якщо вони доступні)
+            Бронює вказану кількість номерів, якщо вони доступні (Reserves the specified number of rooms, if available)
 
         Args:
             count (int): Кількість номерів для бронювання (Number of rooms to book)
