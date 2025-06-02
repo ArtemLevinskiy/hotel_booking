@@ -33,8 +33,8 @@ class Hotel:
 
         if type(rating) != float or type(num_room) != int:
             raise TypeError("Дані повинні бути числовим значенням")
-        if rating < 1 or num_room < 1:
-            raise ValueError("Значення не можуть бути від'ємними")
+        if rating < 1 or num_room < 1 or rating > 5:
+            raise ValueError("Введено не коректні часлові заначення")
         if type(name) != str or type(address) != str or type(phone) != str or type(email) != str:
             raise TypeError("Дані повинні бути строковим значенням")
         if phone.startswith('+380'):
@@ -161,7 +161,7 @@ class Room:
         self._photo = photo
 
         if type(title) != str or type(description) != str or type(photo) != str or type(price) != int:
-            raise TypeError("Опис кімнати повинен бути рядком")
+            raise TypeError("Введено не коректний тип даних")
         if price <= 0:
             raise ValueError("Ціна за добу не може бути менше 0")
 
@@ -212,7 +212,7 @@ class Booking:
 
 
         if nights < 1:
-            raise ValueError("Кількість ночей має бути більше 0")
+            raise ValueError("Кількість діб має бути більше 0")
         if not hotel.is_available():
             raise ValueError("Немає доступних номерів у готелі")
         if rooms_count > hotel._room_available:
